@@ -1,15 +1,15 @@
 <template>
   <div class="container">
-    <template v-for="x in board.length">
+    <template v-for="y in board.length">
       <div
-        v-for="y in board[x - 1].length"
+        v-for="x in board[y - 1].length"
         :key="`${y}-${x}`"
         class="cell"
-        @click="putStone(x, y)"
+        @click="onClick(x - 1, y - 1)"
       >
         <div
-          v-if="isStone(x, y)"
-          :class="['stone', isBlack(x, y) ? 'black' : 'white']"
+          v-if="hasStone(x - 1, y - 1)"
+          :class="['stone', isBlack(x - 1, y - 1) ? 'black' : 'white']"
         />
       </div>
     </template>
@@ -18,10 +18,65 @@
 
 <script lang="ts">
 import { Component, Vue } from 'nuxt-property-decorator'
+
+interface Cell {
+  x: number
+  y: number
+  color: number
+}
+
 @Component
 export default class extends Vue {
-  currentColor = 1 // 1: black, 2:white
+  get hasStone() {
+    return (x: number, y: number): boolean => this.board[y][x] !== 0
+  }
 
+  get isBlack() {
+    return (x: number, y: number): boolean => this.board[y][x] === 1
+  }
+
+  get hasNeighbor() {
+    const sentinel = [
+      // edge of an array can be tricky, I set flags for safty
+      [65, 1, 1, 1, 1, 1, 1, 5],
+      [64, 0, 0, 0, 0, 0, 0, 4],
+      [64, 0, 0, 0, 0, 0, 0, 4],
+      [64, 0, 0, 0, 0, 0, 0, 4],
+      [64, 0, 0, 0, 0, 0, 0, 4],
+      [64, 0, 0, 0, 0, 0, 0, 4],
+      [64, 0, 0, 0, 0, 0, 0, 4],
+      [80, 16, 16, 16, 16, 16, 16, 20]
+    ]
+    const safeDirs = new Map([
+      // eslint-disable-next-line prettier/prettier
+      [0,[[-1, 0], [-1, 1], [0, 1], [1, 1], [1, 0], [1, -1], [0, -1], [-1, -1]]],
+      [1, [[0, 1], [1, 1], [1, 0], [1, -1], [0, -1]]],
+      [4, [[-1, 0], [1, 0], [1, -1], [0, -1], [-1, -1]]],
+      [5, [[1, 0], [1, -1], [0, -1]]],
+      [16, [[-1, 0], [-1, 1], [0, 1], [0, -1], [-1, -1]]],
+      [20, [[-1, 0], [0, -1], [-1, -1]]],
+      [64, [[-1, 0], [-1, 1], [0, 1], [1, 1], [1, 0]]],
+      [65, [[0, 1], [1, 1], [1, 0]]],
+      [80, [[-1, 0], [0, 1], [-1, 1]]]
+    ])
+
+    return (cell: Cell): boolean => {
+      return (safeDirs.get(sentinel[cell.y][cell.x]) || []).some((dir) => {
+        return this.board[cell.y + dir[0]][cell.x + dir[1]] !== 0
+      })
+    }
+  }
+
+  get puttableCells(): Cell[] {
+    return this.board // return booleans
+      .flatMap((row, y) => row.map((color, x) => ({ x, y, color })))
+      .filter((cell) => {
+        console.log(this.hasNeighbor(cell))
+        return this.hasNeighbor(cell)
+      })
+  }
+
+  // prettier-ignore
   board = [
     [0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0],
@@ -33,124 +88,44 @@ export default class extends Vue {
     [0, 0, 0, 0, 0, 0, 0, 0]
   ]
 
-  // marginBoard = [
-  //   [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-  //   [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-  //   [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-  //   [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-  //   [0, 0, 0, 0, 1, 2, 0, 0, 0, 0],
-  //   [0, 0, 0, 0, 2, 1, 0, 0, 0, 0],
-  //   [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-  //   [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-  //   [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-  //   [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-  // ]
+  // ____________
+  // | 128, 1, 2|
+  // |  64, 0, 4|
+  // |  32,16, 8|
+  // ------------
+  // sentinel expalin "out of range" by bit mask
+  // for example '1' mean uppper direction is out of range
+  // another example, 65 = (1 + 64) mean upper and left
 
-  connectedBoard = [
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 1, 1, 1, 1, 0, 0, 0],
-    [0, 0, 0, 1, 1, 1, 1, 0, 0, 0],
-    [0, 0, 0, 1, 1, 1, 1, 0, 0, 0],
-    [0, 0, 0, 1, 1, 1, 1, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-  ]
+  currentColor = 1
 
-  get isStone() {
-    return (x: number, y: number) => this.board[x - 1][y - 1] !== 0
-  }
+  onClick(x: number, y: number) {
+    const canPut = this.puttableCells.some(
+      (cell) => cell.x === x && cell.y === y
+    )
 
-  get isBlack() {
-    return (x: number, y: number) => this.board[x - 1][y - 1] === 1
-  }
-
-  get setStone() {
-    return (x: number, y: number) => {
-      return (this.board[x - 1][y - 1] = this.currentColor)
-    }
-  }
-
-  get isLonelyCell() {
-    return (x: number, y: number) => {
-      console.log(x, y)
-
-      return !this.connectedBoard[x][y]
-    }
-  }
-
-  get passTrun() {
-    return () => {
-      this.currentColor = 3 - this.currentColor
-    }
-  }
-  // TODO: we should use mutate array method
-  get reRenderBoard() {
-    return () => {
+    if (canPut) {
       this.board = JSON.parse(JSON.stringify(this.board))
-    }
-  }
-
-  // get updateMarginBoard() {
-  //   return () => {
-  //     this.board.forEach((row, x) => {
-  //       row.forEach((cell, y) => {
-  //         if (cell) {
-  //           this.marginBoard[x + 1][y + 1] = cell
-  //         }
-  //       })
-  //     })
-  //   }
-  // }
-
-  get updateConnectedBoard() {
-    return () => {
-      this.board.forEach((row, x) => {
-        row.forEach((cell, y) => {
-          if (cell) {
-            this.connectedBoard[x + 0][y + 0] = 1
-            this.connectedBoard[x + 0][y + 1] = 1
-            this.connectedBoard[x + 0][y + 2] = 1
-            this.connectedBoard[x + 1][y + 0] = 1
-            this.connectedBoard[x + 1][y + 2] = 1
-            this.connectedBoard[x + 2][y + 0] = 1
-            this.connectedBoard[x + 2][y + 1] = 1
-            this.connectedBoard[x + 2][y + 2] = 1
-          }
-        })
-      })
-    }
-  }
-
-  get putStone() {
-    return (x: number, y: number) => {
-      if (this.isStone(x, y)) return false
-      if (this.isLonelyCell(x, y)) return false
-      this.setStone(x, y)
-      this.passTrun()
-      this.reRenderBoard()
-      // this.updateMarginBoard()
-      this.updateConnectedBoard()
+      this.board[y][x] = this.currentColor
+      this.currentColor = 3 - this.currentColor
     }
   }
 }
 </script>
 
 <style scoped>
-/* autoprefixer grid: no-autoplace */
 .container {
-  width: 640px;
-  height: 640px;
+  width: 480px;
+  height: 480px;
   margin: 20px auto;
   background: #050;
 }
+
 .cell {
   float: left;
   width: 12.5%;
   height: 12.5%;
-  border: #000 solid;
+  border: 1px #000 solid;
 }
 
 .stone {
@@ -160,10 +135,11 @@ export default class extends Vue {
   border-radius: 50%;
 }
 
-.black {
-  background: #000;
-}
 .white {
   background: #fff;
+}
+
+.black {
+  background: #000;
 }
 </style>
