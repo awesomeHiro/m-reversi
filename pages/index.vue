@@ -35,6 +35,19 @@ export default class extends Vue {
     return (x: number, y: number): boolean => this.board[y][x] === 1
   }
 
+  // dirs = new Map([
+  //   // direction by bit mask
+  //   [0, {}],
+  //   [1, { y: 1, x: 0 }],
+  //   [2, { y: 1, x: 1 }],
+  //   [4, { y: 0, x: 1 }],
+  //   [8, { y: -1, x: 1 }],
+  //   [16, { y: -1, x: 0 }],
+  //   [32, { y: -1, x: -1 }],
+  //   [64, { y: 0, x: -1 }],
+  //   [128, { y: 1, x: -1 }]
+  // ])
+
   get hasNeighbor() {
     const sentinel = [
       // edge of an array can be tricky, I set flags for safty
@@ -71,7 +84,6 @@ export default class extends Vue {
     return this.board // return booleans
       .flatMap((row, y) => row.map((color, x) => ({ x, y, color })))
       .filter((cell) => {
-        console.log(this.hasNeighbor(cell))
         return this.hasNeighbor(cell)
       })
   }
