@@ -105,9 +105,13 @@ export default class extends Vue {
   // |  64, 0, 4|
   // |  32,16, 8|
   // ------------
-  // sentinel expalin "out of range" by bit mask
-  // for example '1' mean uppper direction is out of range
-  // another example, 65 = (1 + 64) mean upper and left
+  // this 3x3 table explain direction by bit mask
+  // this enable describe multi-direction as a single value
+  // for example '1' means (↑)
+  // 65 - (1 + 64) means (↑ , ←)
+  // 128 = (↖)
+  // 255 = (↑ , ➚ , → , ➘ , ↓ , ↙ , ← , ↖)
+  // 0 = no direction.
 
   currentColor = 1
 
