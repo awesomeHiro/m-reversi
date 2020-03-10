@@ -112,9 +112,9 @@ export default class extends Vue {
   currentColor = 1
 
   onClick(x: number, y: number) {
-    const canPut = this.puttableCells.some(
-      (cell) => cell.x === x && cell.y === y
-    )
+    const canPut =
+      this.puttableCells.some((cell) => cell.x === x && cell.y === y) &&
+      !this.hasStone(x, y)
 
     if (canPut) {
       this.board = JSON.parse(JSON.stringify(this.board))
