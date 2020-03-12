@@ -27,7 +27,6 @@ interface Cell {
 
 @Component
 export default class extends Vue {
-  ↑ = 1
   get hasStone() {
     return (x: number, y: number): boolean => this.board[y][x] !== 0
   }
