@@ -35,48 +35,62 @@ export default class extends Vue {
     return (x: number, y: number): boolean => this.board[y][x] === 1
   }
 
-  // dirs = new Map([
-  //   // direction by bit mask
-  //   [0, {}],
-  //   [1, { y: 1, x: 0 }],
-  //   [2, { y: 1, x: 1 }],
-  //   [4, { y: 0, x: 1 }],
-  //   [8, { y: -1, x: 1 }],
-  //   [16, { y: -1, x: 0 }],
-  //   [32, { y: -1, x: -1 }],
-  //   [64, { y: 0, x: -1 }],
-  //   [128, { y: 1, x: -1 }]
-  // ])
+  // NOONE = 0
+  // UPPER = 1
+  // UP_RT = 2
+  // RIGHT = 4
+  // DW_RT = 8
+  // DOWNN = 16
+  // DW_LT = 32
+  // LEFTT = 64
+  // UP_LT = 128
+
+  boardSize = 8
+
+  dirs = new Map([
+    // direction by bit mask
+    [0, {}],
+    [1, { y: 1, x: 0 }],
+    [2, { y: 1, x: 1 }],
+    [4, { y: 0, x: 1 }],
+    [8, { y: -1, x: 1 }],
+    [16, { y: -1, x: 0 }],
+    [32, { y: -1, x: -1 }],
+    [64, { y: 0, x: -1 }],
+    [128, { y: 1, x: -1 }]
+  ])
+
+  sentinel = [
+    // edge of an array can be tricky, I set flags for safty
+    [65, 1, 1, 1, 1, 1, 1, 5],
+    [64, 0, 0, 0, 0, 0, 0, 4],
+    [64, 0, 0, 0, 0, 0, 0, 4],
+    [64, 0, 0, 0, 0, 0, 0, 4],
+    [64, 0, 0, 0, 0, 0, 0, 4],
+    [64, 0, 0, 0, 0, 0, 0, 4],
+    [64, 0, 0, 0, 0, 0, 0, 4],
+    [80, 16, 16, 16, 16, 16, 16, 20]
+  ]
+  safeDirs = new Map([
+    // eslint-disable-next-line prettier/prettier
+      [0,[[-1, 0], [-1, 1], [0, 1], [1, 1], [1, 0], [1, -1], [0, -1], [-1, -1]]],
+    [1, [[0, 1], [1, 1], [1, 0], [1, -1], [0, -1]]],
+    [4, [[-1, 0], [1, 0], [1, -1], [0, -1], [-1, -1]]],
+    [5, [[1, 0], [1, -1], [0, -1]]],
+    [16, [[-1, 0], [-1, 1], [0, 1], [0, -1], [-1, -1]]],
+    [20, [[-1, 0], [0, -1], [-1, -1]]],
+    [64, [[-1, 0], [-1, 1], [0, 1], [1, 1], [1, 0]]],
+    [65, [[0, 1], [1, 1], [1, 0]]],
+    [80, [[-1, 0], [0, 1], [-1, 1]]]
+  ])
 
   get hasNeighbor() {
-    const sentinel = [
-      // edge of an array can be tricky, I set flags for safty
-      [65, 1, 1, 1, 1, 1, 1, 5],
-      [64, 0, 0, 0, 0, 0, 0, 4],
-      [64, 0, 0, 0, 0, 0, 0, 4],
-      [64, 0, 0, 0, 0, 0, 0, 4],
-      [64, 0, 0, 0, 0, 0, 0, 4],
-      [64, 0, 0, 0, 0, 0, 0, 4],
-      [64, 0, 0, 0, 0, 0, 0, 4],
-      [80, 16, 16, 16, 16, 16, 16, 20]
-    ]
-    const safeDirs = new Map([
-      // eslint-disable-next-line prettier/prettier
-      [0,[[-1, 0], [-1, 1], [0, 1], [1, 1], [1, 0], [1, -1], [0, -1], [-1, -1]]],
-      [1, [[0, 1], [1, 1], [1, 0], [1, -1], [0, -1]]],
-      [4, [[-1, 0], [1, 0], [1, -1], [0, -1], [-1, -1]]],
-      [5, [[1, 0], [1, -1], [0, -1]]],
-      [16, [[-1, 0], [-1, 1], [0, 1], [0, -1], [-1, -1]]],
-      [20, [[-1, 0], [0, -1], [-1, -1]]],
-      [64, [[-1, 0], [-1, 1], [0, 1], [1, 1], [1, 0]]],
-      [65, [[0, 1], [1, 1], [1, 0]]],
-      [80, [[-1, 0], [0, 1], [-1, 1]]]
-    ])
-
     return (cell: Cell): boolean => {
-      return (safeDirs.get(sentinel[cell.y][cell.x]) || []).some((dir) => {
-        return this.board[cell.y + dir[0]][cell.x + dir[1]] !== 0
-      })
+      return (this.safeDirs.get(this.sentinel[cell.y][cell.x]) || []).some(
+        (dir) => {
+          return this.board[cell.y + dir[0]][cell.x + dir[1]] !== 0
+        }
+      )
     }
   }
 
@@ -112,6 +126,7 @@ export default class extends Vue {
   // 128 = (↖)
   // 255 = (↑ , ➚ , → , ➘ , ↓ , ↙ , ← , ↖)
   // 0 = no direction.
+  // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Bitwise_Operators
 
   currentColor = 1
 
