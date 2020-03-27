@@ -5,6 +5,9 @@
         v-for="x in board[y - 1].length"
         :key="`${y}-${x}`"
         class="cell"
+        :class="{
+          available: 0 !== availableBoard[currentColor - 1][y - 1][x - 1]
+        }"
         @click="onClick(x - 1, y - 1)"
       >
         <div
@@ -27,50 +30,69 @@ interface Cell {
 
 @Component
 export default class extends Vue {
-  get hasStone() {
-    return (x: number, y: number): boolean => this.board[y][x] !== 0
-  }
-
-  get isBlack() {
-    return (x: number, y: number): boolean => this.board[y][x] === 1
-  }
-
-  // NOONE = 0
-  // UPPER = 1
-  // UP_RT = 2
-  // RIGHT = 4
-  // DW_RT = 8
-  // DOWNN = 16
-  // DW_LT = 32
-  // LEFTT = 64
-  // UP_LT = 128
-
+  // prettier-ignore
+  currentColor = 1
   boardSize = 8
 
-  dirs = new Map([
-    // direction by bit mask
-    [0, {}],
-    [1, { y: 1, x: 0 }],
-    [2, { y: 1, x: 1 }],
-    [4, { y: 0, x: 1 }],
-    [8, { y: -1, x: 1 }],
-    [16, { y: -1, x: 0 }],
-    [32, { y: -1, x: -1 }],
-    [64, { y: 0, x: -1 }],
-    [128, { y: 1, x: -1 }]
+  board = [
+    [0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 1, 2, 0, 0, 0],
+    [0, 0, 0, 2, 1, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0]
+  ]
+
+  availableBoard = [
+    [
+      // Black
+      [0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 16, 0, 0, 0],
+      [0, 0, 0, 0, 0, 64, 0, 0],
+      [0, 0, 4, 0, 0, 0, 0, 0],
+      [0, 0, 0, 1, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0]
+    ],
+    [
+      // Wthie
+      [0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 16, 0, 0, 0, 0],
+      [0, 0, 4, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 64, 0, 0],
+      [0, 0, 0, 0, 1, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0]
+    ]
+  ]
+
+  dirBit = new Map([
+    ['NO', 0],
+    ['↑', 1],
+    ['➚', 2],
+    ['→', 4],
+    ['➘', 8],
+    ['↓', 16],
+    ['↙', 32],
+    ['←', 64],
+    ['↖', 128]
   ])
 
-  sentinel = [
-    // edge of an array can be tricky, I set flags for safty
-    [65, 1, 1, 1, 1, 1, 1, 5],
-    [64, 0, 0, 0, 0, 0, 0, 4],
-    [64, 0, 0, 0, 0, 0, 0, 4],
-    [64, 0, 0, 0, 0, 0, 0, 4],
-    [64, 0, 0, 0, 0, 0, 0, 4],
-    [64, 0, 0, 0, 0, 0, 0, 4],
-    [64, 0, 0, 0, 0, 0, 0, 4],
-    [80, 16, 16, 16, 16, 16, 16, 20]
-  ]
+  dir = new Map([
+    [this.dirBit.get('NO'), { y: 0, x: 0 }],
+    [this.dirBit.get('↑'), { y: 1, x: 0 }],
+    [this.dirBit.get('➚'), { y: 1, x: 1 }],
+    [this.dirBit.get('→'), { y: 0, x: 1 }],
+    [this.dirBit.get('➘'), { y: -1, x: 1 }],
+    [this.dirBit.get('↓'), { y: -1, x: 0 }],
+    [this.dirBit.get('↙'), { y: -1, x: -1 }],
+    [this.dirBit.get('←'), { y: 0, x: -1 }],
+    [this.dirBit.get('↖'), { y: 1, x: -1 }]
+  ])
   safeDirs = new Map([
     // eslint-disable-next-line prettier/prettier
       [0,[[-1, 0], [-1, 1], [0, 1], [1, 1], [1, 0], [1, -1], [0, -1], [-1, -1]]],
@@ -83,16 +105,42 @@ export default class extends Vue {
     [65, [[0, 1], [1, 1], [1, 0]]],
     [80, [[-1, 0], [0, 1], [-1, 1]]]
   ])
+  sentinel = [
+    // edge of an array can be tricky, I set flags for safty
+    [65, 1, 1, 1, 1, 1, 1, 5],
+    [64, 0, 0, 0, 0, 0, 0, 4],
+    [64, 0, 0, 0, 0, 0, 0, 4],
+    [64, 0, 0, 0, 0, 0, 0, 4],
+    [64, 0, 0, 0, 0, 0, 0, 4],
+    [64, 0, 0, 0, 0, 0, 0, 4],
+    [64, 0, 0, 0, 0, 0, 0, 4],
+    [80, 16, 16, 16, 16, 16, 16, 20]
+  ]
+
+  get hasStone() {
+    return (x: number, y: number): boolean => this.board[y][x] !== 0
+  }
+
+  get isBlack() {
+    return (x: number, y: number): boolean => this.board[y][x] === 1
+  }
 
   get hasNeighbor() {
     return (cell: Cell): boolean => {
       return (this.safeDirs.get(this.sentinel[cell.y][cell.x]) || []).some(
         (dir) => {
-          return this.board[cell.y + dir[0]][cell.x + dir[1]] !== 0
+          return (
+            this.board[cell.y + dir[0]][cell.x + dir[1]] !== 0 &&
+            this.board[cell.y + dir[0]][cell.x + dir[1]] !== this.currentColor
+          )
         }
       )
     }
   }
+
+  // get updateAvailableBoard(): Cell[] {
+  //   // this.availableBoard[this.currentColor - 1] =
+  // }
 
   get puttableCells(): Cell[] {
     return this.board // return booleans
@@ -101,34 +149,6 @@ export default class extends Vue {
         return this.hasNeighbor(cell)
       })
   }
-
-  // prettier-ignore
-  board = [
-    [0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 1, 2, 0, 0, 0],
-    [0, 0, 0, 2, 1, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0]
-  ]
-
-  // ____________
-  // | 128, 1, 2|
-  // |  64, 0, 4|
-  // |  32,16, 8|
-  // ------------
-  // this 3x3 table explain direction by bit mask
-  // this enable describe multi-direction as a single value
-  // for example '1' means (↑)
-  // 65 - (1 + 64) means (↑ , ←)
-  // 128 = (↖)
-  // 255 = (↑ , ➚ , → , ➘ , ↓ , ↙ , ← , ↖)
-  // 0 = no direction.
-  // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Bitwise_Operators
-
-  currentColor = 1
 
   onClick(x: number, y: number) {
     const canPut =
@@ -150,6 +170,10 @@ export default class extends Vue {
   height: 480px;
   margin: 20px auto;
   background: #050;
+}
+
+.available {
+  background: #060;
 }
 
 .cell {
