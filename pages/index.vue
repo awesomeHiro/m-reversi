@@ -125,28 +125,22 @@ export default class extends Vue {
     return (x: number, y: number): boolean => this.board[y][x] === 1
   }
 
-  get hasNeighbor() {
-    return (cell: Cell): boolean => {
-      return (this.safeDirs.get(this.sentinel[cell.y][cell.x]) || []).some(
+  get touchingEnemies() {
+    return (cell: Cell) => {
+      return (this.safeDirs.get(this.sentinel[cell.y][cell.x]) || []).filter(
         (dir) => {
-          return (
-            this.board[cell.y + dir[0]][cell.x + dir[1]] !== 0 &&
-            this.board[cell.y + dir[0]][cell.x + dir[1]] !== this.currentColor
-          )
+          const target = this.board[cell.y + dir[0]][cell.x + dir[1]]
+          return target !== 0 && target !== this.currentColor
         }
       )
     }
   }
 
-  // get updateAvailableBoard(): Cell[] {
-  //   // this.availableBoard[this.currentColor - 1] =
-  // }
-
   get puttableCells(): Cell[] {
     return this.board // return booleans
       .flatMap((row, y) => row.map((color, x) => ({ x, y, color })))
       .filter((cell) => {
-        return this.hasNeighbor(cell)
+        return this.touchingEnemies(cell).length > 0
       })
   }
 
