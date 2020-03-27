@@ -6,7 +6,8 @@
         :key="`${y}-${x}`"
         class="cell"
         :class="{
-          available: 0 !== availableBoard[currentColor - 1][y - 1][x - 1]
+          touchEnemy: 0 !== enemyDir[currentColor - 1][y - 1][x - 1],
+          puttable: 0 !== flippableDir[currentColor - 1][y - 1][x - 1]
         }"
         @click="onClick(x - 1, y - 1)"
       >
@@ -25,6 +26,8 @@ import { Component, Vue } from 'nuxt-property-decorator'
 interface Cell {
   x: number
   y: number
+  // bitEnemy: number
+  // bitFlippable: number
   color: number
 }
 
@@ -45,9 +48,33 @@ export default class extends Vue {
     [0, 0, 0, 0, 0, 0, 0, 0]
   ]
 
-  availableBoard = [
+  enemyDir = [
     [
-      // Black
+      // as Black
+      [0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 8, 16, 32, 0, 0],
+      [0, 0, 8, 0, 0, 64, 0, 0],
+      [0, 0, 4, 0, 0, 128, 0, 0],
+      [0, 0, 2, 1, 128, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0]
+    ],
+    [
+      // as Wthie
+      [0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 8, 16, 32, 0, 0, 0],
+      [0, 0, 4, 0, 0, 32, 0, 0],
+      [0, 0, 2, 0, 0, 64, 0, 0],
+      [0, 0, 0, 2, 1, 128, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0]
+    ]
+  ]
+  flippableDir = [
+    [
+      // as Black
       [0, 0, 0, 0, 0, 0, 0, 0],
       [0, 0, 0, 0, 0, 0, 0, 0],
       [0, 0, 0, 0, 16, 0, 0, 0],
@@ -58,7 +85,7 @@ export default class extends Vue {
       [0, 0, 0, 0, 0, 0, 0, 0]
     ],
     [
-      // Wthie
+      // as Wthie
       [0, 0, 0, 0, 0, 0, 0, 0],
       [0, 0, 0, 0, 0, 0, 0, 0],
       [0, 0, 0, 16, 0, 0, 0, 0],
@@ -126,7 +153,7 @@ export default class extends Vue {
   }
 
   get touchingEnemies() {
-    return (cell: Cell) => {
+    const touchingEnemies = (cell: Cell) => {
       return (this.safeDirs.get(this.sentinel[cell.y][cell.x]) || []).filter(
         (dir) => {
           const target = this.board[cell.y + dir[0]][cell.x + dir[1]]
@@ -134,6 +161,7 @@ export default class extends Vue {
         }
       )
     }
+    return touchingEnemies
   }
 
   get puttableCells(): Cell[] {
@@ -145,9 +173,10 @@ export default class extends Vue {
   }
 
   onClick(x: number, y: number) {
-    const canPut =
-      this.puttableCells.some((cell) => cell.x === x && cell.y === y) &&
-      !this.hasStone(x, y)
+    const enemies = this.puttableCells
+    console.log(enemies)
+    const hasEnemy = enemies.some((cell) => cell.x === x && cell.y === y)
+    const canPut = hasEnemy && !this.hasStone(x, y)
 
     if (canPut) {
       this.board = JSON.parse(JSON.stringify(this.board))
@@ -166,8 +195,12 @@ export default class extends Vue {
   background: #050;
 }
 
-.available {
+.touchEnemy {
   background: #060;
+}
+
+.puttable {
+  background: #070;
 }
 
 .cell {
