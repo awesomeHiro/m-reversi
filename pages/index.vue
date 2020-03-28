@@ -153,7 +153,7 @@ export default class extends Vue {
   }
 
   get touchingEnemies() {
-    const touchingEnemies = (cell: Cell) => {
+    const touchingEnemies = (cell: Cell): number[][] => {
       return (this.safeDirs.get(this.sentinel[cell.y][cell.x]) || []).filter(
         (dir) => {
           const target = this.board[cell.y + dir[0]][cell.x + dir[1]]
@@ -165,16 +165,22 @@ export default class extends Vue {
   }
 
   // get updateEnemyDir() {
+  // const updateEnemyDir = (cell: Cell, enemy: number[][]) => {
+  //   this.enemyDir[this.color - 1][cell.y][cell.x] = enemy
   // }
-
+  // return updateEnemyDir
+  // }
   get puttableCells(): Cell[] {
     const flatBoard = this.board.flatMap((row, y) =>
       row.map((color, x) => ({ x, y, color }))
     )
     const cellsWithEnemy = flatBoard.filter((cell) => {
-      return this.touchingEnemies(cell).length > 0
+      const enemies = this.touchingEnemies(cell)
+      // this.updateEnemyDir(cell, enemies)
+      // console.log(`cell: ${cell.y} ${cell.x} enemy :${enemies}`)
+      console.log(enemies)
+      return enemies.length > 0
     })
-    // this.updateEnemyDir(cellsWithEnemy) //TODO: implement function
     const cellsWithFlippable = cellsWithEnemy
     console.log(cellsWithEnemy)
     return cellsWithFlippable
