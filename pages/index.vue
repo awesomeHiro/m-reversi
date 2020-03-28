@@ -174,7 +174,7 @@ export default class extends Vue {
     const cellsWithEnemy = flatBoard.filter((cell) => {
       return this.touchingEnemies(cell).length > 0
     })
-    // this.updateEnemyDir(cellsWithEnemy) //TODO: implement this
+    // this.updateEnemyDir(cellsWithEnemy) //TODO: implement function
     const cellsWithFlippable = cellsWithEnemy
     console.log(cellsWithEnemy)
     return cellsWithFlippable
