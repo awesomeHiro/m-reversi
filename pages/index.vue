@@ -165,11 +165,14 @@ export default class extends Vue {
   }
 
   get puttableCells(): Cell[] {
-    return this.board // return booleans
-      .flatMap((row, y) => row.map((color, x) => ({ x, y, color })))
-      .filter((cell) => {
-        return this.touchingEnemies(cell).length > 0
-      })
+    const flatBoard = this.board.flatMap((row, y) =>
+      row.map((color, x) => ({ x, y, color }))
+    )
+    const cellsWithEnemy = flatBoard.filter((cell) => {
+      return this.touchingEnemies(cell).length > 0
+    })
+    const cellsWithFlippable = cellsWithEnemy
+    return cellsWithFlippable
   }
 
   onClick(x: number, y: number) {
