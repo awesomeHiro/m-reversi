@@ -6,8 +6,8 @@
         :key="`${y}-${x}`"
         class="cell"
         :class="{
-          touchEnemy: 0 !== enemyDir[currentColor - 1][y - 1][x - 1],
-          puttable: 0 !== flippableDir[currentColor - 1][y - 1][x - 1]
+          touchEnemy: 0 !== enemyDir[color - 1][y - 1][x - 1],
+          puttable: 0 !== flippableDir[color - 1][y - 1][x - 1]
         }"
         @click="onClick(x - 1, y - 1)"
       >
@@ -34,7 +34,7 @@ interface Cell {
 @Component
 export default class extends Vue {
   // prettier-ignore
-  currentColor = 1
+  color = 1
   boardSize = 8
 
   board = [
@@ -157,7 +157,7 @@ export default class extends Vue {
       return (this.safeDirs.get(this.sentinel[cell.y][cell.x]) || []).filter(
         (dir) => {
           const target = this.board[cell.y + dir[0]][cell.x + dir[1]]
-          return target !== 0 && target !== this.currentColor
+          return target !== 0 && target !== this.color
         }
       )
     }
@@ -180,8 +180,8 @@ export default class extends Vue {
 
     if (canPut) {
       this.board = JSON.parse(JSON.stringify(this.board))
-      this.board[y][x] = this.currentColor
-      this.currentColor = 3 - this.currentColor
+      this.board[y][x] = this.color
+      this.color = 3 - this.color
     }
   }
 }
