@@ -164,6 +164,9 @@ export default class extends Vue {
     return touchingEnemies
   }
 
+  // get updateEnemyDir() {
+  // }
+
   get puttableCells(): Cell[] {
     const flatBoard = this.board.flatMap((row, y) =>
       row.map((color, x) => ({ x, y, color }))
@@ -171,13 +174,14 @@ export default class extends Vue {
     const cellsWithEnemy = flatBoard.filter((cell) => {
       return this.touchingEnemies(cell).length > 0
     })
+    // this.updateEnemyDir(cellsWithEnemy) //TODO: implement this
     const cellsWithFlippable = cellsWithEnemy
+    console.log(cellsWithEnemy)
     return cellsWithFlippable
   }
 
   onClick(x: number, y: number) {
     const enemies = this.puttableCells
-    console.log(enemies)
     const hasEnemy = enemies.some((cell) => cell.x === x && cell.y === y)
     const canPut = hasEnemy && !this.hasStone(x, y)
 
