@@ -14,6 +14,8 @@
     "allowJs": true,
     "sourceMap": true,
     "strict": false,
+    "strictNullChecks": false,
+    "no-unused-expressions": false,
     "noEmit": true,
     "baseUrl": ".",
     "paths": {

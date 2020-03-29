@@ -27,28 +27,26 @@ const BOARDSIZE = 8
 // const WHITE = -1
 const BLACK = 1
 // const MARGIN = 2
-// const dirBit = new Map([
-//   ['↑', 1],
-//   ['➚', 2],
-//   ['→', 4],
-//   ['➘', 8],
-//   ['↓', 16],
-//   ['↙', 32],
-//   ['←', 64],
-//   ['↖', 128]
-// ])
-// dir = new Map([
-//   [dirBit.get('NO'), { y: 0, x: 0 }],
-//   [dirBit.get('↑'), { y: 1, x: 0 }],
-//   [dirBit.get('➚'), { y: 1, x: 1 }],
-//   [dirBit.get('→'), { y: 0, x: 1 }],
-//   [dirBit.get('➘'), { y: -1, x: 1 }],
-//   [dirBit.get('↓'), { y: -1, x: 0 }],
-//   [dirBit.get('↙'), { y: -1, x: -1 }],
-//   [dirBit.get('←'), { y: 0, x: -1 }],
-//   [dirBit.get('↖'), { y: 1, x: -1 }]
-// ])
-
+const dirBit = new Map([
+  ['↑', 1],
+  ['➚', 2],
+  ['→', 4],
+  ['➘', 8],
+  ['↓', 16],
+  ['↙', 32],
+  ['←', 64],
+  ['↖', 128]
+])
+const dirs = new Map([
+  [dirBit.get('↑'), { y: -1, x: 0 }],
+  [dirBit.get('➚'), { y: -1, x: 1 }],
+  [dirBit.get('→'), { y: 0, x: 1 }],
+  [dirBit.get('➘'), { y: 1, x: 1 }],
+  [dirBit.get('↓'), { y: 1, x: 0 }],
+  [dirBit.get('↙'), { y: 1, x: -1 }],
+  [dirBit.get('←'), { y: 0, x: -1 }],
+  [dirBit.get('↖'), { y: -1, x: -1 }]
+])
 @Component
 export default class extends Vue {
   color = BLACK
@@ -81,16 +79,36 @@ export default class extends Vue {
   }
   canPut(y: number, x: number): Boolean {
     let flag = true
-    const flipDir = this.flipDir(y, x)
+    const flippableDirs = this.flippableDirs(y, x)
     flag = this.board[y][x] === 0 ? flag : false
-    flipDir === 0 ? (flag = false) : this.flip()
+    flag = flippableDirs === 0 ? false : flag
     return flag
   }
-  flipDir(y: number, x: number): number {
-    const z = y + x
-    return z
+  flippableDirs(y: number, x: number): number {
+    let bit = 0
+    dirs.forEach((dir, dirBit = 0) => {
+      const [dy, dx] = [dir.y, dir.x]
+      bit += this.isFlippable(y, x, dy, dx) ? dirBit : 0
+    })
+    return bit
   }
-  flip() {}
+  isFlippable(y: number, x: number, dy: number, dx: number): boolean {
+    let isActivated = false
+    ;[y, x] = [y + dy, x + dx]
+    while (this.board[y][x] === -this.color) {
+      ;[y, x] = [y + dy, x + dx]
+      isActivated = true
+    }
+    const isFlippable = this.board[y][x] === this.color && isActivated
+    if (isFlippable) {
+      ;[y, x] = [y - dy, x - dx]
+      while (this.board[y][x] === -this.color) {
+        this.board[y][x] = this.color
+        ;[y, x] = [y - dy, x - dx]
+      }
+    }
+    return isFlippable
+  }
   isGameOver() {}
   putStone(y: number, x: number) {
     this.board[y][x] = this.color
