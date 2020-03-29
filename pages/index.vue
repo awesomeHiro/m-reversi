@@ -22,17 +22,54 @@
 <script lang="ts">
 import { Component, Vue } from 'nuxt-property-decorator'
 
-interface Cell {
-  x: number
-  y: number
-  color: number
-}
+// const EMPTY = 0
+// const WHITE = -1
+// const BLACK = 1
+// const dirBit = new Map([
+//   ['NO', 0],
+//   ['↑', 1],
+//   ['➚', 2],
+//   ['→', 4],
+//   ['➘', 8],
+//   ['↓', 16],
+//   ['↙', 32],
+//   ['←', 64],
+//   ['↖', 128]
+// ])
+// dir = new Map([
+//   [this.dirBit.get('NO'), { y: 0, x: 0 }],
+//   [this.dirBit.get('↑'), { y: 1, x: 0 }],
+//   [this.dirBit.get('➚'), { y: 1, x: 1 }],
+//   [this.dirBit.get('→'), { y: 0, x: 1 }],
+//   [this.dirBit.get('➘'), { y: -1, x: 1 }],
+//   [this.dirBit.get('↓'), { y: -1, x: 0 }],
+//   [this.dirBit.get('↙'), { y: -1, x: -1 }],
+//   [this.dirBit.get('←'), { y: 0, x: -1 }],
+//   [this.dirBit.get('↖'), { y: 1, x: -1 }]
+// ])
+// safeDirs = new Map([
+//   // eslint-disable-next-line prettier/prettier
+//   [this.dirBit.get('NO'),[[-1, 0], [-1, 1], [0, 1], [1, 1], [1, 0], [1, -1], [0, -1], [-1, -1]]],
+//   [this.dirBit.get('↑'), [[0, 1], [1, 1], [1, 0], [1, -1], [0, -1]]],
+//   [this.dirBit.get('➚'), [[-1, 0], [1, 0], [1, -1], [0, -1], [-1, -1]]],
+//   [this.dirBit.get('→'), [[1, 0], [1, -1], [0, -1]]],
+//   [this.dirBit.get('➘'), [[-1, 0], [-1, 1], [0, 1], [0, -1], [-1, -1]]],
+//   [this.dirBit.get('↓'), [[-1, 0], [0, -1], [-1, -1]]],
+//   [this.dirBit.get('↙'), [[-1, 0], [-1, 1], [0, 1], [1, 1], [1, 0]]],
+//   [this.dirBit.get('←'), [[0, 1], [1, 1], [1, 0]]],
+//   [this.dirBit.get('↖'), [[-1, 0], [0, 1], [-1, 1]]]
+// ])
 
 @Component
 export default class extends Vue {
-  // prettier-ignore
   color = 1
   boardSize = 8
+  beforeCreate() {
+    const row = [] as any
+    const board = []
+    board.push(row)
+    this.boardSize = 8
+  }
 
   board = [
     [0, 0, 0, 0, 0, 0, 0, 0],
@@ -45,113 +82,12 @@ export default class extends Vue {
     [0, 0, 0, 0, 0, 0, 0, 0]
   ]
 
-  enemyDir = [
-    [
-      // as Black
-      [0, 0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 8, 16, 32, 0, 0],
-      [0, 0, 8, 0, 0, 64, 0, 0],
-      [0, 0, 4, 0, 0, 128, 0, 0],
-      [0, 0, 2, 1, 128, 0, 0, 0],
-      [0, 0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 0, 0, 0]
-    ],
-    [
-      // as Wthie
-      [0, 0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 8, 16, 32, 0, 0, 0],
-      [0, 0, 4, 0, 0, 32, 0, 0],
-      [0, 0, 2, 0, 0, 64, 0, 0],
-      [0, 0, 0, 2, 1, 128, 0, 0],
-      [0, 0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 0, 0, 0]
-    ]
-  ]
-
-  flippableDir = [
-    [
-      // as Black
-      [0, 0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 16, 0, 0, 0],
-      [0, 0, 0, 0, 0, 64, 0, 0],
-      [0, 0, 4, 0, 0, 0, 0, 0],
-      [0, 0, 0, 1, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 0, 0, 0]
-    ],
-    [
-      // as Wthie
-      [0, 0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 16, 0, 0, 0, 0],
-      [0, 0, 4, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 64, 0, 0],
-      [0, 0, 0, 0, 1, 0, 0, 0],
-      [0, 0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 0, 0, 0]
-    ]
-  ]
-  sentinel = [
-    // edge of an array can be tricky, I set flags for safty
-    [65, 1, 1, 1, 1, 1, 1, 5],
-    [64, 0, 0, 0, 0, 0, 0, 4],
-    [64, 0, 0, 0, 0, 0, 0, 4],
-    [64, 0, 0, 0, 0, 0, 0, 4],
-    [64, 0, 0, 0, 0, 0, 0, 4],
-    [64, 0, 0, 0, 0, 0, 0, 4],
-    [64, 0, 0, 0, 0, 0, 0, 4],
-    [80, 16, 16, 16, 16, 16, 16, 20]
-  ]
-
-  dirBit = new Map([
-    ['NO', 0],
-    ['↑', 1],
-    ['➚', 2],
-    ['→', 4],
-    ['➘', 8],
-    ['↓', 16],
-    ['↙', 32],
-    ['←', 64],
-    ['↖', 128]
-  ])
-
-  dir = new Map([
-    [this.dirBit.get('NO'), { y: 0, x: 0 }],
-    [this.dirBit.get('↑'), { y: 1, x: 0 }],
-    [this.dirBit.get('➚'), { y: 1, x: 1 }],
-    [this.dirBit.get('→'), { y: 0, x: 1 }],
-    [this.dirBit.get('➘'), { y: -1, x: 1 }],
-    [this.dirBit.get('↓'), { y: -1, x: 0 }],
-    [this.dirBit.get('↙'), { y: -1, x: -1 }],
-    [this.dirBit.get('←'), { y: 0, x: -1 }],
-    [this.dirBit.get('↖'), { y: 1, x: -1 }]
-  ])
-  safeDirs = new Map([
-    // eslint-disable-next-line prettier/prettier
-    [this.dirBit.get('NO'),[[-1, 0], [-1, 1], [0, 1], [1, 1], [1, 0], [1, -1], [0, -1], [-1, -1]]],
-    [this.dirBit.get('↑'), [[0, 1], [1, 1], [1, 0], [1, -1], [0, -1]]],
-    [this.dirBit.get('➚'), [[-1, 0], [1, 0], [1, -1], [0, -1], [-1, -1]]],
-    [this.dirBit.get('→'), [[1, 0], [1, -1], [0, -1]]],
-    [this.dirBit.get('➘'), [[-1, 0], [-1, 1], [0, 1], [0, -1], [-1, -1]]],
-    [this.dirBit.get('↓'), [[-1, 0], [0, -1], [-1, -1]]],
-    [this.dirBit.get('↙'), [[-1, 0], [-1, 1], [0, 1], [1, 1], [1, 0]]],
-    [this.dirBit.get('←'), [[0, 1], [1, 1], [1, 0]]],
-    [this.dirBit.get('↖'), [[-1, 0], [0, 1], [-1, 1]]]
-  ])
-
   get hasStone() {
     return (x: number, y: number): boolean => this.board[y][x] !== 0
   }
 
   get isBlack() {
     return (x: number, y: number): boolean => this.board[y][x] === 1
-  }
-
-  get updateAvailableBoard(): {
-    // this.availableBoard[this.color - 1] =
   }
 
   onClick(x: number, y: number) {
