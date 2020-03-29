@@ -78,32 +78,33 @@ export default class extends Vue {
     }
   }
   canPut(y: number, x: number): number {
-    return this.flippableDirs(y, x)
+    return this.getFlippableDirs(y, x)
   }
-  flippableDirs(y: number, x: number): number {
+  getFlippableDirs(y: number, x: number): number {
     let bit = 0
     dirs.forEach((dir, dirBit = 0) => {
       const [dy, dx] = [dir.y, dir.x]
-      bit += this.isFlippable(y, x, dy, dx) ? dirBit : 0
+      bit += this.tryFlip(y, x, dy, dx) ? dirBit : 0
     })
     return bit
   }
-  isFlippable(y: number, x: number, dy: number, dx: number): boolean {
-    let isActivated = false
+  tryFlip(y: number, x: number, dy: number, dx: number): boolean {
+    let hasConnectedEnemy = false
     ;[y, x] = [y + dy, x + dx]
     while (this.board[y][x] === -this.color) {
       ;[y, x] = [y + dy, x + dx]
-      isActivated = true
+      hasConnectedEnemy = true
     }
-    const isFlippable = this.board[y][x] === this.color && isActivated
-    if (isFlippable) {
-      ;[y, x] = [y - dy, x - dx]
-      while (this.board[y][x] === -this.color) {
-        this.board[y][x] = this.color
-        ;[y, x] = [y - dy, x - dx]
-      }
-    }
+    const isFlippable = this.board[y][x] === this.color && hasConnectedEnemy
+    if (isFlippable) this.flip(y, x, dy, dx)
     return isFlippable
+  }
+  flip(y: number, x: number, dy: number, dx: number) {
+    ;[y, x] = [y - dy, x - dx]
+    while (this.board[y][x] === -this.color) {
+      this.board[y][x] = this.color
+      ;[y, x] = [y - dy, x - dx]
+    }
   }
   isGameOver() {}
   putStone(y: number, x: number) {
