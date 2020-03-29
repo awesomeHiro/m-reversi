@@ -6,7 +6,7 @@
         :key="`${y}-${x}`"
         class="cell"
         :class="{
-          available: 0 !== availableBoard[color - 1][y - 1][x - 1]
+          // available: 0 !== availableBoard[color - 1][y - 1][x - 1]
         }"
         @click="onClick(x - 1, y - 1)"
       >
@@ -155,8 +155,7 @@ export default class extends Vue {
   }
 
   onClick(x: number, y: number) {
-    if (this.flippableDir[this.color - 1][y][x]) {
-    }
+    const canPut = true
     if (canPut) {
       this.board = JSON.parse(JSON.stringify(this.board))
       this.board[y][x] = this.color
