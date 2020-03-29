@@ -1,18 +1,18 @@
 <template>
   <div class="container">
-    <template v-for="y in board.length">
+    <template v-for="y in boardSize">
       <div
-        v-for="x in board[y - 1].length"
+        v-for="x in boardSize"
         :key="`${y}-${x}`"
         class="cell"
         :class="{
           // available: 0 !== availableBoard[color - 1][y - 1][x - 1]
         }"
-        @click="onClick(x - 1, y - 1)"
+        @click="onClick(x, y)"
       >
         <div
-          v-if="hasStone(x - 1, y - 1)"
-          :class="['stone', isBlack(x - 1, y - 1) ? 'black' : 'white']"
+          v-if="hasStone(x, y)"
+          :class="['stone', isBlack(x, y) ? 'black' : 'white']"
         />
       </div>
     </template>
@@ -22,9 +22,11 @@
 <script lang="ts">
 import { Component, Vue } from 'nuxt-property-decorator'
 
+const BOARDSIZE = 8
 // const EMPTY = 0
 // const WHITE = -1
-// const BLACK = 1
+const BLACK = 1
+// const MARGIN = 2
 // const dirBit = new Map([
 //   ['NO', 0],
 //   ['↑', 1],
@@ -37,49 +39,46 @@ import { Component, Vue } from 'nuxt-property-decorator'
 //   ['↖', 128]
 // ])
 // dir = new Map([
-//   [this.dirBit.get('NO'), { y: 0, x: 0 }],
-//   [this.dirBit.get('↑'), { y: 1, x: 0 }],
-//   [this.dirBit.get('➚'), { y: 1, x: 1 }],
-//   [this.dirBit.get('→'), { y: 0, x: 1 }],
-//   [this.dirBit.get('➘'), { y: -1, x: 1 }],
-//   [this.dirBit.get('↓'), { y: -1, x: 0 }],
-//   [this.dirBit.get('↙'), { y: -1, x: -1 }],
-//   [this.dirBit.get('←'), { y: 0, x: -1 }],
-//   [this.dirBit.get('↖'), { y: 1, x: -1 }]
+//   [dirBit.get('NO'), { y: 0, x: 0 }],
+//   [dirBit.get('↑'), { y: 1, x: 0 }],
+//   [dirBit.get('➚'), { y: 1, x: 1 }],
+//   [dirBit.get('→'), { y: 0, x: 1 }],
+//   [dirBit.get('➘'), { y: -1, x: 1 }],
+//   [dirBit.get('↓'), { y: -1, x: 0 }],
+//   [dirBit.get('↙'), { y: -1, x: -1 }],
+//   [dirBit.get('←'), { y: 0, x: -1 }],
+//   [dirBit.get('↖'), { y: 1, x: -1 }]
 // ])
 // safeDirs = new Map([
 //   // eslint-disable-next-line prettier/prettier
-//   [this.dirBit.get('NO'),[[-1, 0], [-1, 1], [0, 1], [1, 1], [1, 0], [1, -1], [0, -1], [-1, -1]]],
-//   [this.dirBit.get('↑'), [[0, 1], [1, 1], [1, 0], [1, -1], [0, -1]]],
-//   [this.dirBit.get('➚'), [[-1, 0], [1, 0], [1, -1], [0, -1], [-1, -1]]],
-//   [this.dirBit.get('→'), [[1, 0], [1, -1], [0, -1]]],
-//   [this.dirBit.get('➘'), [[-1, 0], [-1, 1], [0, 1], [0, -1], [-1, -1]]],
-//   [this.dirBit.get('↓'), [[-1, 0], [0, -1], [-1, -1]]],
-//   [this.dirBit.get('↙'), [[-1, 0], [-1, 1], [0, 1], [1, 1], [1, 0]]],
-//   [this.dirBit.get('←'), [[0, 1], [1, 1], [1, 0]]],
-//   [this.dirBit.get('↖'), [[-1, 0], [0, 1], [-1, 1]]]
+//   [dirBit.get('NO'),[[-1, 0], [-1, 1], [0, 1], [1, 1], [1, 0], [1, -1], [0, -1], [-1, -1]]],
+//   [dirBit.get('↑'), [[0, 1], [1, 1], [1, 0], [1, -1], [0, -1]]],
+//   [dirBit.get('➚'), [[-1, 0], [1, 0], [1, -1], [0, -1], [-1, -1]]],
+//   [dirBit.get('→'), [[1, 0], [1, -1], [0, -1]]],
+//   [dirBit.get('➘'), [[-1, 0], [-1, 1], [0, 1], [0, -1], [-1, -1]]],
+//   [dirBit.get('↓'), [[-1, 0], [0, -1], [-1, -1]]],
+//   [dirBit.get('↙'), [[-1, 0], [-1, 1], [0, 1], [1, 1], [1, 0]]],
+//   [dirBit.get('←'), [[0, 1], [1, 1], [1, 0]]],
+//   [dirBit.get('↖'), [[-1, 0], [0, 1], [-1, 1]]]
 // ])
 
 @Component
 export default class extends Vue {
-  color = 1
-  boardSize = 8
-  beforeCreate() {
-    const row = [] as any
-    const board = []
-    board.push(row)
-    this.boardSize = 8
-  }
+  color = BLACK
+  boardSize = BOARDSIZE
+  beforeCreate() {}
 
   board = [
-    [0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 1, 2, 0, 0, 0],
-    [0, 0, 0, 2, 1, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0]
+    [2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
+    [2, 0, 0, 0, 0, 0, 0, 0, 0, 2],
+    [2, 0, 0, 0, 0, 0, 0, 0, 0, 2],
+    [2, 0, 0, 0, 0, 0, 0, 0, 0, 2],
+    [2, 0, 0, 0, 1, -1, 0, 0, 0, 2],
+    [2, 0, 0, 0, -1, 1, 0, 0, 0, 2],
+    [2, 0, 0, 0, 0, 0, 0, 0, 0, 2],
+    [2, 0, 0, 0, 0, 0, 0, 0, 0, 2],
+    [2, 0, 0, 0, 0, 0, 0, 0, 0, 2],
+    [2, 2, 2, 2, 2, 2, 2, 2, 2, 2]
   ]
 
   get hasStone() {
