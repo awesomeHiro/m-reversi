@@ -2,6 +2,7 @@
   "compilerOptions": {
     "target": "esnext",
     "module": "esnext",
+    "noImplicitAny": false,
     "moduleResolution": "node",
     "lib": [
       "esnext",
@@ -12,7 +13,9 @@
     "esModuleInterop": true,
     "allowJs": true,
     "sourceMap": true,
-    "strict": true,
+    "strict": false,
+    "strictNullChecks": false,
+    "no-unused-expressions": false,
     "noEmit": true,
     "baseUrl": ".",
     "paths": {
