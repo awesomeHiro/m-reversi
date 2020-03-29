@@ -6,8 +6,7 @@
         :key="`${y}-${x}`"
         class="cell"
         :class="{
-          touchEnemy: 0 < enemyDir[color - 1][y - 1][x - 1].length,
-          puttable: 0 < flippableDir[color - 1][y - 1][x - 1].length
+          //puttable: 0 < flippableDir[color - 1][y - 1][x - 1][0].length
         }"
         @click="onClick(x - 1, y - 1)"
       >
@@ -26,9 +25,9 @@ import { Component, Vue } from 'nuxt-property-decorator'
 interface Cell {
   x: number
   y: number
-  // bitEnemy: number
-  // bitFlippable: number
   color: number
+  enemyDir: number[][]
+  flippableDir: number[][]
 }
 
 @Component
@@ -48,53 +47,9 @@ export default class extends Vue {
     [0, 0, 0, 0, 0, 0, 0, 0]
   ]
 
-  enemyDir = [
-    [
-      [[], [], [], [], [], [], [], []],
-      [[], [], [], [], [], [], [], []],
-      [[], [], [], [], [], [], [], []],
-      [[], [], [], [], [], [], [], []],
-      [[], [], [], [], [], [], [], []],
-      [[], [], [], [], [], [], [], []],
-      [[], [], [], [], [], [], [], []],
-      [[], [], [], [], [], [], [], []]
-    ],
-    [
-      [[], [], [], [], [], [], [], []],
-      [[], [], [], [], [], [], [], []],
-      [[], [], [], [], [], [], [], []],
-      [[], [], [], [], [], [], [], []],
-      [[], [], [], [], [], [], [], []],
-      [[], [], [], [], [], [], [], []],
-      [[], [], [], [], [], [], [], []],
-      [[], [], [], [], [], [], [], []]
-    ]
-  ]
-  flippableDir = [
-    [
-      [[], [], [], [], [], [], [], []],
-      [[], [], [], [], [], [], [], []],
-      [[], [], [], [], [], [], [], []],
-      [[], [], [], [], [], [], [], []],
-      [[], [], [], [], [], [], [], []],
-      [[], [], [], [], [], [], [], []],
-      [[], [], [], [], [], [], [], []],
-      [[], [], [], [], [], [], [], []]
-    ],
-    [
-      [[], [], [], [], [], [], [], []],
-      [[], [], [], [], [], [], [], []],
-      [[], [], [], [], [], [], [], []],
-      [[], [], [], [], [], [], [], []],
-      [[], [], [], [], [], [], [], []],
-      [[], [], [], [], [], [], [], []],
-      [[], [], [], [], [], [], [], []],
-      [[], [], [], [], [], [], [], []]
-    ]
-  ]
-  safeDirs = new Map([
+  searchDir = new Map([
     // eslint-disable-next-line prettier/prettier
-      [0,[[-1, 0], [-1, 1], [0, 1], [1, 1], [1, 0], [1, -1], [0, -1], [-1, -1]]],
+    [0,[[-1, 0], [-1, 1], [0, 1], [1, 1], [1, 0], [1, -1], [0, -1], [-1, -1]]],
     [1, [[0, 1], [1, 1], [1, 0], [1, -1], [0, -1]]],
     [4, [[-1, 0], [1, 0], [1, -1], [0, -1], [-1, -1]]],
     [5, [[1, 0], [1, -1], [0, -1]]],
@@ -124,40 +79,6 @@ export default class extends Vue {
     return (x: number, y: number): boolean => this.board[y][x] === 1
   }
 
-  get touchingEnemies() {
-    const touchingEnemies = (cell: Cell): number[][] => {
-      return (this.safeDirs.get(this.sentinel[cell.y][cell.x]) || []).filter(
-        (dir) => {
-          const target = this.board[cell.y + dir[0]][cell.x + dir[1]]
-          return target !== 0 && target !== this.color
-        }
-      )
-    }
-    return touchingEnemies
-  }
-
-  // get updateEnemyDir() {
-  // const updateEnemyDir = (cell: Cell, enemy: number[][]) => {
-  //   this.enemyDir[this.color - 1][cell.y][cell.x] = enemy
-  // }
-  // return updateEnemyDir
-  // }
-  get puttableCells(): Cell[] {
-    const flatBoard = this.board.flatMap((row, y) =>
-      row.map((color, x) => ({ x, y, color }))
-    )
-    const cellsWithEnemy = flatBoard.filter((cell) => {
-      const enemies = this.touchingEnemies(cell)
-      // this.updateEnemyDir(cell, enemies)
-      // console.log(`cell: ${cell.y} ${cell.x} enemy :${enemies}`)
-      console.log(enemies)
-      return enemies.length > 0
-    })
-    const cellsWithFlippable = cellsWithEnemy
-    console.log(cellsWithEnemy)
-    return cellsWithFlippable
-  }
-
   onClick(x: number, y: number) {
     const enemies = this.puttableCells
     const hasEnemy = enemies.some((cell) => cell.x === x && cell.y === y)
@@ -168,6 +89,63 @@ export default class extends Vue {
       this.board[y][x] = this.color
       this.color = 3 - this.color
     }
+  }
+  get puttableCells(): Cell[] {
+    const flatBoard = this.flatBoard.filter((cell) => {
+      return this.touchingEnemies(cell).length > 0
+    })
+    console.log(flatBoard)
+    return flatBoard
+  }
+
+  get flatBoard() {
+    return this.board.flatMap((row, y) =>
+      row.map((color, x) => ({ x, y, color, enemyDir: [], flippableDir: [] }))
+    )
+  }
+
+  get touchingEnemies() {
+    const touchingEnemies = (cell: Cell): number[][] => {
+      cell.enemyDir = (
+        this.searchDir.get(this.sentinel[cell.y][cell.x]) || []
+      ).filter((dir) => {
+        const target = this.board[cell.y + dir[0]][cell.x + dir[1]]
+        return (
+          target !== 0 &&
+          target !== this.color &&
+          this.board[cell.y][cell.x] === 0
+        )
+      })
+      this.flippableEnemies(cell)
+      return cell.enemyDir
+    }
+    return touchingEnemies
+  }
+  get flippableEnemies() {
+    const flippableEnemies = (cell: Cell): number[][] => {
+      cell.enemyDir.forEach((dir) => {
+        const [dy, dx] = [dir[1], dir[0]]
+        let [y, x] = [cell.y + dy, cell.x + dx]
+        const tmp = []
+        while (
+          this.sentinel[y - dy][x - dx] === 0 &&
+          this.board[y][x] === 3 - this.color
+        ) {
+          console.log([y, x])
+          tmp.push([y, x])
+          y += dy
+          x += dx
+          if (this.board[y][x] === this.color) {
+            tmp.forEach((elm) => {
+              cell.flippableDir.push(elm)
+            })
+            break
+          }
+        }
+      })
+      return cell.enemyDir
+    }
+    return flippableEnemies
   }
 }
 </script>
