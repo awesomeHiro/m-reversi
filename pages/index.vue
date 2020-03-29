@@ -28,7 +28,6 @@ const BOARDSIZE = 8
 const BLACK = 1
 // const MARGIN = 2
 // const dirBit = new Map([
-//   ['NO', 0],
 //   ['↑', 1],
 //   ['➚', 2],
 //   ['→', 4],
@@ -67,7 +66,6 @@ export default class extends Vue {
   color = BLACK
   boardSize = BOARDSIZE
   beforeCreate() {}
-
   board = [
     [2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
     [2, 0, 0, 0, 0, 0, 0, 0, 0, 2],
@@ -80,22 +78,40 @@ export default class extends Vue {
     [2, 0, 0, 0, 0, 0, 0, 0, 0, 2],
     [2, 2, 2, 2, 2, 2, 2, 2, 2, 2]
   ]
-
   get hasStone() {
     return (x: number, y: number): boolean => this.board[y][x] !== 0
   }
-
   get isBlack() {
     return (x: number, y: number): boolean => this.board[y][x] === 1
   }
-
   onClick(x: number, y: number) {
-    const canPut = true
-    if (canPut) {
-      this.board = JSON.parse(JSON.stringify(this.board))
-      this.board[y][x] = this.color
-      this.color = 3 - this.color
+    if (this.canPut(y, x)) {
+      this.putStone(y, x)
+      this.rerenderBoard()
+      this.passTurn()
     }
+  }
+  canPut(y: number, x: number): Boolean {
+    let flag = true
+    const flipDir = this.flipDir(y, x)
+    flag = this.board[y][x] === 0 ? flag : false
+    flipDir === 0 ? (flag = false) : this.flip()
+    return flag
+  }
+  flipDir(y: number, x: number): number {
+    const z = y + x
+    return z
+  }
+  flip() {}
+  isGameOver() {}
+  putStone(y: number, x: number) {
+    this.board[y][x] = this.color
+  }
+  passTurn() {
+    this.color = this.color * -1
+  }
+  rerenderBoard() {
+    this.board = JSON.parse(JSON.stringify(this.board))
   }
 }
 </script>
