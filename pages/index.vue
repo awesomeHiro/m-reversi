@@ -106,7 +106,12 @@ export default class extends Vue {
       ;[y, x] = [y - dy, x - dx]
     }
   }
-  isGameOver() {}
+  isGameOver() {
+    return this.countStones() >= BOARDSIZE * BOARDSIZE
+  }
+  countStones(): number {
+    return this.board.flat().filter((e) => e !== 2 && e !== 0).length
+  }
   putStone(y: number, x: number) {
     this.board[y][x] = this.color
   }
