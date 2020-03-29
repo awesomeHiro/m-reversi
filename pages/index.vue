@@ -77,12 +77,8 @@ export default class extends Vue {
       this.passTurn()
     }
   }
-  canPut(y: number, x: number): Boolean {
-    let flag = true
-    const flippableDirs = this.flippableDirs(y, x)
-    flag = this.board[y][x] === 0 ? flag : false
-    flag = flippableDirs === 0 ? false : flag
-    return flag
+  canPut(y: number, x: number): number {
+    return this.flippableDirs(y, x)
   }
   flippableDirs(y: number, x: number): number {
     let bit = 0
